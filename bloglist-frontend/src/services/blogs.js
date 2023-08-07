@@ -13,9 +13,22 @@ const setToken = (newToken) => {
   token = `Bearer ${newToken}`
 }
 
+const addNewBlog = async (newBlog) => {
+
+  const config = {
+    headers: { Authorization: token }
+  }
+
+  const request =
+    await
+      axios.post(baseUrl, newBlog, config)
+  return (request)
+
+}
+
 
 
 
 
 // eslint-disable-next-line import/no-anonymous-default-export
-export default { getAll, setToken }
+export default { getAll, setToken, addNewBlog }
