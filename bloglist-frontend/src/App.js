@@ -7,6 +7,9 @@ import loginService from './services/login'
 //import notification
 import Notification from './components/Notification'
 
+import BlogForm from './components/BlogForm'
+
+import Togglable from './components/Togglable'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -17,9 +20,9 @@ const App = () => {
   const [user, setUser] = useState(null)
 
   // blogToAdd information
-  const [titleBlogToAdd, setTitleBlogToAdd] = useState('')
-  const [authorBlogToAdd, setAuthorBlogToAdd] = useState('')
-  const [urlBlogToAdd, setUrlBlogToAdd] = useState('')
+  // const [titleBlogToAdd, setTitleBlogToAdd] = useState('')
+  // const [authorBlogToAdd, setAuthorBlogToAdd] = useState('')
+  // const [urlBlogToAdd, setUrlBlogToAdd] = useState('')
 
 
   //notification messages
@@ -107,43 +110,45 @@ const App = () => {
     console.log('out of handleLogin')
   }
 
-  const addBlog = async (event) => {
+  
+
+  const addBlog =
+    async (titleBlogToAdd, authorBlogToAdd, urlBlogToAdd) => {
 
 
 
-    console.log('in addBlog')
-    event.preventDefault()
+      console.log('in addBlog')
 
-    const blogToAdd = {
-      title: titleBlogToAdd,
-      author: authorBlogToAdd,
-      url: urlBlogToAdd
+      console.log(user)
+      const blogToAdd = {
+        title: titleBlogToAdd,
+        author: authorBlogToAdd,
+        url: urlBlogToAdd
+      }
+
+      const request = await blogService.addNewBlog(blogToAdd)
+
+      setCreationMessage(request)
+      setTimeout(() => {
+        setCreationMessage(null)
+      }, 5000)
+
+      console.log('add new blog request', request.data)
+      if (request.status === 201) {
+        let tempBlogs = blogs
+        tempBlogs = tempBlogs.concat(request.data)
+        console.log(tempBlogs)
+        setBlogs(tempBlogs)
+
+      }
+
     }
-
-    const request = await blogService.addNewBlog(blogToAdd)
-
-    setCreationMessage(request)
-    setTimeout(() => {
-      setCreationMessage(null)
-    }, 5000)
-
-    console.log(request)
-    if (request.status === 201) {
-      let tempBlogs = blogs
-      tempBlogs = tempBlogs.concat(request.data)
-      setBlogs(tempBlogs)
-      setTitleBlogToAdd('')
-      setAuthorBlogToAdd('')
-      setUrlBlogToAdd('')
-    }
-
-  }
 
   const logout = (event) => {
     console.log('before logout, stored user: ', window.localStorage.getItem('loggedBlogappUser'))
     console.log('logging out')
     const loggingOut = true
-    setLoginMessage({user, loggingOut})
+    setLoginMessage({ user, loggingOut })
     setTimeout(() => {
       setLoginMessage(null)
     }, 5000)
@@ -154,17 +159,56 @@ const App = () => {
     console.log('after logout: ', window.localStorage.removeItem('loggedBlogappUser'))
   }
 
+
+  const incrementBlogLikesByOne = async (blogToIncreaseLikes) => {
+    console.log('in increment in app.js')
+    const response = await blogService.addLikeToBlog(blogToIncreaseLikes)
+    console.log(response)
+  }
+
+  const removeBlog = async (blogToRemove) => {
+    console.log('in remove blog')
+    console.log(blogToRemove)
+    const response = await blogService.removeBlogService(blogToRemove)
+    console.log(response)
+
+    if (response.status === 204) {
+      console.log('deletion successful')
+      let blogIndexToDelete = blogs.findIndex((blog) => {
+        if (blog.id === blogToRemove.id) {
+          return true
+        }else{
+          return false
+        }
+      })
+
+      console.log(blogIndexToDelete)
+      setBlogs(blogs.splice(blogIndexToDelete, 1))
+
+    }
+  }
+
   // page rendering
   const blogList = () => {
     return (
       <>
         <div>
           <h2>Blog List</h2>
-          {currentUserLogout()}
+
           <div>
-            {blogs.map(blog =>
-              <Blog key={blog.id} blog={blog} />
-            )}
+            {blogs
+              .sort((a, b) => b.likes - a.likes)
+              .map(blog => {
+                return (
+                  <Blog key={blog.id}
+                    blog={blog}
+                    incrementBlogLikesByOne={incrementBlogLikesByOne}
+                    removeBlog={removeBlog}
+                  />
+
+                )
+              }
+              )}
           </div>
 
         </div>
@@ -206,42 +250,13 @@ const App = () => {
 
   const blogForm = () => {
     return (
-      <>
-        <div>
-          <h2>Create New</h2>
-          <form onSubmit={addBlog}>
-            <div> title:
-              <input
-                type="text"
-                value={titleBlogToAdd}
-                name="Title"
-                onChange={({ target }) => setTitleBlogToAdd(target.value)}
-              />
-            </div>
-            <div>
-              author:
-              <input
-                type="text"
-                value={authorBlogToAdd}
-                name="Author"
-                onChange={({ target }) => setAuthorBlogToAdd(target.value)}
-              />
-            </div>
-            <div>
-              url:
-              <input
-                type="text"
-                value={urlBlogToAdd}
-                name="Author"
-                onChange={({ target }) => setUrlBlogToAdd(target.value)}
-              />
-            </div>
-            <button type="submit">create</button>
-          </form>
-        </div>
-      </>
+      <Togglable buttonLabel='Create new blog entry'>
+        <BlogForm addBlog={addBlog} />
+      </Togglable>
     )
   }
+
+
 
   return (
     <div>
@@ -250,16 +265,14 @@ const App = () => {
         loginMessage={loginMessage}
       />
       <h1>Blogs</h1>
+
       {user === null ?
         loginForm() :
-
-        (
-          <>
-
-            {blogForm()}
-            {blogList()}
-          </>
-        )
+        <>
+          {currentUserLogout()}
+          {blogForm()}
+          {blogList()}
+        </>
 
       }
 
