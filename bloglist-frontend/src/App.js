@@ -32,6 +32,9 @@ const App = () => {
   const [loginMessage, setLoginMessage] = useState(null)
 
 
+  const [deletionMessage, setDeletionMessage] = useState(null)
+
+
 
 
 
@@ -110,7 +113,7 @@ const App = () => {
     console.log('out of handleLogin')
   }
 
-  
+
 
   const addBlog =
     async (titleBlogToAdd, authorBlogToAdd, urlBlogToAdd) => {
@@ -144,7 +147,7 @@ const App = () => {
 
     }
 
-  const logout = (event) => {
+  const logout = () => {
     console.log('before logout, stored user: ', window.localStorage.getItem('loggedBlogappUser'))
     console.log('logging out')
     const loggingOut = true
@@ -169,46 +172,81 @@ const App = () => {
   const removeBlog = async (blogToRemove) => {
     console.log('in remove blog')
     console.log(blogToRemove)
-    const response = await blogService.removeBlogService(blogToRemove)
-    console.log(response)
+    console.log('blogs:', blogs)
 
-    if (response.status === 204) {
-      console.log('deletion successful')
-      let blogIndexToDelete = blogs.findIndex((blog) => {
-        if (blog.id === blogToRemove.id) {
-          return true
-        }else{
-          return false
-        }
-      })
 
-      console.log(blogIndexToDelete)
-      setBlogs(blogs.splice(blogIndexToDelete, 1))
+    try {
+      const response = await blogService.removeBlogService(blogToRemove)
+      if (response.status === 204) {
+        console.log('deletion successful')
+        let blogIndexToDelete = blogs.findIndex((blog) => {
+          if (blog.id === blogToRemove.id) {
+            return true
+          } else {
+            return false
+          }
+        })
 
+        let testBlogs = [
+          ...blogs
+        ]
+        testBlogs.splice(blogIndexToDelete, 1)
+        console.log(blogs)
+        console.log('tblogs', testBlogs)
+        setBlogs(testBlogs)
+        setDeletionMessage(blogToRemove)
+        setTimeout(() => {
+          setDeletionMessage(null)
+        }, 5000)
+
+
+
+      }
     }
+    catch {
+      window.alert('deletion failed - bad authorization')
+      setDeletionMessage('deletion failed')
+      setTimeout(() => {
+        setDeletionMessage(null)
+      }, 5000)
+    }
+
+  }
+
+
+  const reorderBlogsBasedOnLikes = () => {
+    let orderedBlogs = [...blogs]
+    orderedBlogs.sort((a, b) => b.likes - a.likes)
+    setBlogs(orderedBlogs)
   }
 
   // page rendering
   const blogList = () => {
+    
+
+
     return (
       <>
         <div>
           <h2>Blog List</h2>
 
           <div>
-            {blogs
-              .sort((a, b) => b.likes - a.likes)
-              .map(blog => {
-                return (
-                  <Blog key={blog.id}
-                    blog={blog}
-                    incrementBlogLikesByOne={incrementBlogLikesByOne}
-                    removeBlog={removeBlog}
-                  />
+            {
+              blogs
+                .map((blog, blogIndex) => {
+                  return (
+                    <Blog key={blog.id}
+                      blog={blog}
+                      incrementBlogLikesByOne={incrementBlogLikesByOne}
+                      removeBlog={removeBlog}
+                      user={user}
+                      reorderBlogsBasedOnLikes = {reorderBlogsBasedOnLikes}
+                      blogIndex={blogIndex}
+                    />
 
-                )
-              }
-              )}
+                  )
+                }
+                )}
           </div>
 
         </div>
@@ -227,6 +265,7 @@ const App = () => {
               type="text"
               value={username}
               name="Username"
+              id="usernameInput"
               onChange={({ target }) => setUsername(target.value)}
             />
           </div>
@@ -236,13 +275,17 @@ const App = () => {
               type="text"
               value={password}
               name="Password"
+              id="passwordInput"
               onChange={({ target }) => setPassword(target.value)}
             />
           </div>
 
 
 
-          <button type="submit">login</button>
+          <button
+            type="submit"
+            id="loginButton"
+          >login</button>
         </form>
       </>
     )
@@ -251,7 +294,7 @@ const App = () => {
   const blogForm = () => {
     return (
       <Togglable buttonLabel='Create new blog entry'>
-        <BlogForm addBlog={addBlog} />
+        <BlogForm addBlog={addBlog} reorderBlogsBasedOnLikes = {reorderBlogsBasedOnLikes} />
       </Togglable>
     )
   }
@@ -263,6 +306,7 @@ const App = () => {
       <Notification
         creationMessage={creationMessage}
         loginMessage={loginMessage}
+        deletionMessage={deletionMessage}
       />
       <h1>Blogs</h1>
 

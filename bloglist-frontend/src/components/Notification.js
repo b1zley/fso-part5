@@ -1,6 +1,6 @@
 
 
-const Notification = ({ creationMessage, loginMessage }) => {
+const Notification = ({ creationMessage, loginMessage, deletionMessage }) => {
     let textToReturn
     let isError
 
@@ -24,12 +24,23 @@ const Notification = ({ creationMessage, loginMessage }) => {
         isError = true
 
     } else if (loginMessage) {
-        let username = loginMessage.username
+        // let username = loginMessage.username
         let name = loginMessage.name
         isError = false
         textToReturn = `Successfully logged in as ${name}`
 
-    } else {
+    } else if (deletionMessage && deletionMessage === 'deletion failed') {
+        textToReturn = 'Deletion failed'
+        isError = true
+    } else if(deletionMessage){
+        isError = false
+        console.log(deletionMessage)
+        let blogToDeleteAuthor = deletionMessage.author
+        let blogToDeleteTitle = deletionMessage.title
+        textToReturn = `Blog ${blogToDeleteTitle} by ${blogToDeleteAuthor} successfully deleted`
+    }
+
+    else {
         isError = false
         textToReturn = 'No message'
     }
@@ -66,13 +77,16 @@ const Notification = ({ creationMessage, loginMessage }) => {
         style = errorStyle
     }
 
-    if(!creationMessage && !loginMessage){
-        return(null)
+    if (!creationMessage && !loginMessage && !deletionMessage) {
+        return (null)
     }
 
 
     return (
-        <div style={style}>
+        <div
+        style={style}
+        id="notification"
+        >
             {textToReturn}
         </div>
 

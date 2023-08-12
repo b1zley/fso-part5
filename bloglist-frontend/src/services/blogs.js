@@ -1,3 +1,4 @@
+
 import axios from 'axios'
 const baseUrl = '/api/blogs'
 
@@ -31,15 +32,15 @@ const addLikeToBlog = async (blogToIncreaseLikes) => {
 
   const blogId = blogToIncreaseLikes.id
   console.log('blogservices', blogToIncreaseLikes)
-  
+
   const url = `${baseUrl}/${blogId}`
-  
+
 
 
   const request =
     await
       axios.put(url, blogToIncreaseLikes)
-      
+
   return(request.data)
 
 
@@ -69,8 +70,7 @@ const removeBlogService = async (blogToDelete) => {
 }
 
 
+let blogService = { getAll, setToken, addNewBlog , addLikeToBlog , removeBlogService }
 
 
-
-// eslint-disable-next-line import/no-anonymous-default-export
-export default { getAll, setToken, addNewBlog , addLikeToBlog , removeBlogService }
+export default blogService

@@ -1,10 +1,14 @@
+
 import { useState } from 'react'
+import PropTypes from 'prop-types'
 
 
 
 const Blog = ({ blog,
   incrementBlogLikesByOne,
-  removeBlog }) => {
+  removeBlog, user,
+  reorderBlogsBasedOnLikes, blogIndex
+}) => {
   const [showInfo, setShowInfo] = useState(false)
 
   const [buttonText, setButtonText] = useState('Show')
@@ -27,6 +31,7 @@ const Blog = ({ blog,
     console.log('like button clicked at above blog')
     incrementBlogLikesByOne(blog)
     setBlogLikes(blog.likes)
+    reorderBlogsBasedOnLikes()
 
   }
   const handleRemoveButtonClick = () => {
@@ -41,15 +46,15 @@ const Blog = ({ blog,
 
     return (
       <>
-        <button onClick={handleLikeButtonClick}> like </button>
+        <button className='blogLikeButton' onClick={handleLikeButtonClick}> like </button>
       </>
     )
   }
 
   const removeButton = () => {
-    //implement removeButton
+
     return (
-      <button onClick={handleRemoveButtonClick}>delete</button>
+      <button className="blogRemoveButton" onClick={handleRemoveButtonClick}>delete</button>
     )
   }
 
@@ -57,12 +62,11 @@ const Blog = ({ blog,
 
   const viewButton = () => {
 
-
     return (
 
       <>
 
-        <button onClick={handleViewButtonClick} >{buttonText}</button>
+        <button className='blogViewButton' onClick={handleViewButtonClick} >{buttonText}</button>
       </>
 
     )
@@ -71,13 +75,21 @@ const Blog = ({ blog,
 
 
   const additionalInfo = () => {
-    if (showInfo === true) {
+    if (showInfo === true && user.username === blog.user.username) {
       return (
         <>
-          <div>{blog.url}</div>
-          <div>likes {blogLikes} {likeButton()} </div>
-          <div>{blog.user.name}</div>
-          <div>{removeButton()}</div>
+          <div className='blogUrl'>{blog.url}</div>
+          <div className='blogLikes'>likes {blogLikes} {likeButton()} </div>
+          <div className='blogUsername'>{blog.user.name}</div>
+          <div className='removeButton'>{removeButton()}</div>
+        </>
+      )
+    } else if (showInfo === true) {
+      return (
+        <>
+          <div className='blogUrl'>{blog.url}</div>
+          <div className='blogLikes'>likes {blogLikes} {likeButton()} </div>
+          <div className='blogUsername'>{blog.user.name}</div>
         </>
       )
     } else {
@@ -94,18 +106,29 @@ const Blog = ({ blog,
     marginBottom: 5
   }
 
+  const blogId = `blogNumber${blogIndex}`
+
 
   return (
     <>
-      <div style={blogStyle}>
-        <div>
+      <div style={blogStyle} className='blog' id={blogId}>
+        <div className='blogAlwaysShown'>
           {blog.title} {blog.author} {viewButton()}
         </div>
-        {additionalInfo()}
+        <div className='blogSometimesShown'>
+          {additionalInfo()}
+        </div>
       </div>
 
     </>
   )
+
+}
+
+Blog.propTypes = {
+  blog: PropTypes.object.isRequired,
+  incrementBlogLikesByOne: PropTypes.func.isRequired,
+  removeBlog: PropTypes.func.isRequired
 
 }
 
